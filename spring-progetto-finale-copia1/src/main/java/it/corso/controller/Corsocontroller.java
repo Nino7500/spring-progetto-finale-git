@@ -3,16 +3,13 @@ package it.corso.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import it.corso.dto.CorsoDto;
 import it.corso.jwt.JWTTokenNeeded;
 import it.corso.jwt.Secured;
 import it.corso.service.CorsoService;
-import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
@@ -25,8 +22,6 @@ public class Corsocontroller {
 
 	@Autowired
 	private CorsoService corsoService;
-
-	
 
 	/*
 	@GET

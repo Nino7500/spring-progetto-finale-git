@@ -138,18 +138,26 @@ public class UtenteController {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response loginUtente(@RequestBody UtenteLoginRequestDto utenteLoginRequestDto) {
-		try {
+	    try {
+	        // Verifica se l'utente esiste nel database
+	        if (!utenteService.existsUserByEmail(utenteLoginRequestDto.getEmail())) {
+	            return Response.status(Response.Status.NOT_FOUND).build();
+	        }
 
-			if(utenteService.loginUtente(utenteLoginRequestDto)) {
-				return Response.ok(issueToken(utenteLoginRequestDto.getEmail())).build();
-			}
-			return Response.status(Response.Status.BAD_REQUEST).build();
-
-		}catch (Exception e) {
-			return Response.status(Response.Status.BAD_REQUEST).build();
-		}
+	        // Altrimenti, procedi con il processo di login normale
+	        if (utenteService.loginUtente(utenteLoginRequestDto)) {
+	            // Se il login è riuscito, restituisci il token di accesso
+	            return Response.ok(issueToken(utenteLoginRequestDto.getEmail())).build();
+	        } else {
+	            // Se il login non è riuscito, restituisci un errore di autenticazione
+	            return Response.status(Response.Status.UNAUTHORIZED).build();
+	        }
+	    } catch (Exception e) {
+	        // Gestisci altri tipi di eccezioni qui, se necessario
+	        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+	    }
 	}
-
+	
 	private UtenteLoginResponseDto issueToken(String email) {
 
 		// eseguiamo una cifratura attraverso l'algoritmo di crittografia HMAC 

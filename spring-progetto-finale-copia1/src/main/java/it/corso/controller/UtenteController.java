@@ -21,6 +21,7 @@ import it.corso.dto.UtenteLoginResponseDto;
 import it.corso.dto.UtenteRegistrazioneDto;
 import it.corso.model.Ruolo;
 import it.corso.model.Utente;
+import it.corso.service.Blacklist;
 import it.corso.service.UtenteService;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
@@ -32,6 +33,8 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -40,6 +43,9 @@ public class UtenteController {
 
 	@Autowired
 	private UtenteService utenteService;
+	
+	@Autowired
+	private Blacklist blacklist;
 
 	@POST
 	@Path("/registrazione")
@@ -59,7 +65,7 @@ public class UtenteController {
 
 			return Response.status(Response.Status.OK).build();
 
-		}catch (Exception e) {
+		} catch (Exception e) {
 
 			return Response.status(Response.Status.BAD_REQUEST).build();
 		}
@@ -84,7 +90,7 @@ public class UtenteController {
 	}
 
 	@DELETE
-	@Path("delete/{email}")
+	@Path("/delete/{email}")
 	public Response deleteUser(@PathParam("email") String email) {
 
 		try {
@@ -97,7 +103,6 @@ public class UtenteController {
 		}
 
 	}
-
 
 	@GET
 	@Path("/visualizzautente")
@@ -138,26 +143,18 @@ public class UtenteController {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response loginUtente(@RequestBody UtenteLoginRequestDto utenteLoginRequestDto) {
-	    try {
-	        // Verifica se l'utente esiste nel database
-	        if (!utenteService.existsUserByEmail(utenteLoginRequestDto.getEmail())) {
-	            return Response.status(Response.Status.NOT_FOUND).build();
-	        }
+		try {
 
-	        // Altrimenti, procedi con il processo di login normale
-	        if (utenteService.loginUtente(utenteLoginRequestDto)) {
-	            // Se il login è riuscito, restituisci il token di accesso
-	            return Response.ok(issueToken(utenteLoginRequestDto.getEmail())).build();
-	        } else {
-	            // Se il login non è riuscito, restituisci un errore di autenticazione
-	            return Response.status(Response.Status.UNAUTHORIZED).build();
-	        }
-	    } catch (Exception e) {
-	        // Gestisci altri tipi di eccezioni qui, se necessario
-	        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-	    }
+			if(utenteService.loginUtente(utenteLoginRequestDto)) {
+				return Response.ok(issueToken(utenteLoginRequestDto.getEmail())).build();
+			}
+			return Response.status(Response.Status.BAD_REQUEST).build();
+
+		}catch (Exception e) {
+			return Response.status(Response.Status.BAD_REQUEST).build();
+		}
 	}
-	
+
 	private UtenteLoginResponseDto issueToken(String email) {
 
 		// eseguiamo una cifratura attraverso l'algoritmo di crittografia HMAC 
@@ -196,6 +193,24 @@ public class UtenteController {
 		token.setTtl(end);
 
 		return token;
+	}
+	
+	@GET
+	@Path("/logout")
+	public Response logoutUtente(ContainerRequestContext requestContext) {
+		//si potrebbe usare Redis(DB noSQL) per salvare le sessione
+		try {
+			
+		String authorizationHeander = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+		String token = authorizationHeander.substring("Bearer".length()).trim();
+		
+		blacklist.invalidateToken(token);
+		return Response.status(Response.Status.OK).build();
+		
+		} catch (Exception e) {
+			return Response.status(Response.Status.BAD_REQUEST).build();
+		}
+		
 	}
 
 }

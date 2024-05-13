@@ -1,13 +1,27 @@
 package it.corso.dto;
 
 public class CorsoDto {
-
+	
+	private int id;
 	private String nomeCorso;
 	private String descrizioneBreve;
 	private String descrizioneCompleta;
 	private int durata;
 	private int idCategoria;
+	private int idUtente;
 
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
+	public int getIdUtente() {
+		return idUtente;
+	}
+	public void setIdUtente(int idUtente) {
+		this.idUtente = idUtente;
+	}
 	public int getIdCategoria() {
 		return idCategoria;
 	}

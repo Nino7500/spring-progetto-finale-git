@@ -11,6 +11,11 @@ public interface CorsoService {
 	boolean existsByNome(String nome);
 
 	List<CorsoDto> getCourses();
-	
+
+	void eliminaCorso(int id);
+
+	void modificaCorso(int id, CorsoDto corsoDto);
+
+	CorsoDto getCourseById(int id);
 	
 }
